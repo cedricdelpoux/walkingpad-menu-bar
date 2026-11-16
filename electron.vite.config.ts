@@ -11,5 +11,6 @@ export default defineConfig({
       alias: {"@shared": resolve(__dirname, "src/shared")},
     },
     plugins: [react(), tailwindcss()],
+    server: {port: 5103, strictPort: true},
   },
 })
