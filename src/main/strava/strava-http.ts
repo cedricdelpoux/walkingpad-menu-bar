@@ -1,3 +1,4 @@
+import JSONbig from "json-bigint"
 import type {
   StravaAthlete,
   StravaCredentials,
@@ -6,6 +7,8 @@ import type {
 
 const API_URL = "https://www.strava.com/api/v3"
 const OAUTH_URL = "https://www.strava.com/oauth"
+
+const jsonParser = JSONbig({storeAsString: true})
 
 // activity:read_all also covers private activities when looking for one already published.
 export const STRAVA_SCOPE = "activity:read_all,activity:write"
@@ -38,14 +41,14 @@ export interface ActivityFileUpload {
 }
 
 export interface StravaUpload {
-  id: number
+  id: string
   status: string
   error: string | null
-  activity_id: number | null
+  activity_id: string | null
 }
 
 export interface StravaSummaryActivity {
-  id: number
+  id: string
   name: string
   sport_type: string
   start_date_local: string
@@ -54,6 +57,16 @@ export interface StravaSummaryActivity {
 }
 
 type FetchFunction = typeof fetch
+
+const toId = (id: string | number) => String(id)
+
+function toUpload(upload: StravaUpload): StravaUpload {
+  return {
+    ...upload,
+    id: toId(upload.id),
+    activity_id: upload.activity_id && toId(upload.activity_id),
+  }
+}
 
 const ENTITIES: Record<string, string> = {
   amp: "&",
@@ -77,7 +90,7 @@ export function toPlainText(text: string): string {
 async function readErrorMessage(response: Response): Promise<string> {
   const text = await response.text()
   try {
-    const body = JSON.parse(text) as {
+    const body = jsonParser.parse(text) as {
       message?: string
       errors?: Array<{field?: string; code?: string}>
     }
@@ -127,7 +140,7 @@ export class StravaHttp {
       refreshToken: body.refresh_token,
       expiresAt: body.expires_at,
       athlete: {
-        id: body.athlete.id,
+        id: toId(body.athlete.id),
         firstname: body.athlete.firstname,
         lastname: body.athlete.lastname,
       },
@@ -174,11 +187,15 @@ export class StravaHttp {
       method: "POST",
       headers: {Authorization: `Bearer ${accessToken}`},
       body: form,
-    })
+    }).then(toUpload)
   }
 
-  getUpload(accessToken: string, uploadId: number): Promise<StravaUpload> {
-    return this.api<StravaUpload>(accessToken, "GET", `/uploads/${uploadId}`)
+  getUpload(accessToken: string, uploadId: string): Promise<StravaUpload> {
+    return this.api<StravaUpload>(
+      accessToken,
+      "GET",
+      `/uploads/${uploadId}`
+    ).then(toUpload)
   }
 
   updateActivity(
@@ -205,6 +222,8 @@ export class StravaHttp {
       accessToken,
       "GET",
       `/athlete/activities?${query}`
+    ).then((activities) =>
+      activities.map((activity) => ({...activity, id: toId(activity.id)}))
     )
   }
 
@@ -247,7 +266,7 @@ export class StravaHttp {
     } catch (error) {
       throw new StravaError("network", (error as Error).message)
     }
-    if (response.ok) return (await response.json()) as T
+    if (response.ok) return jsonParser.parse(await response.text()) as T
 
     const message = await readErrorMessage(response)
     if (response.status === 429)

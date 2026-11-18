@@ -175,7 +175,7 @@ export class ActivityPublisher extends EventEmitter<{
         if (duplicateActivityId) return duplicateActivityId
         throw new StravaError("api", toPlainText(upload.error))
       }
-      if (upload.activity_id) return String(upload.activity_id)
+      if (upload.activity_id) return upload.activity_id
       if (this.now() > deadline)
         throw new StravaError(
           "api",
@@ -215,7 +215,7 @@ export class ActivityPublisher extends EventEmitter<{
     activities: StravaSummaryActivity[]
   ): void {
     const existingActivityIds = new Set(
-      activities.map((activity) => String(activity.id))
+      activities.map((activity) => activity.id)
     )
     for (const publication of this.dependencies.publications.listFrom(
       firstDay

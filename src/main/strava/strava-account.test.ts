@@ -21,7 +21,7 @@ const tokens = (expiresAt: number): StravaTokens => ({
   accessToken: "old-access",
   refreshToken: "old-refresh",
   expiresAt,
-  athlete: {id: 1, firstname: "Cédric", lastname: "D"},
+  athlete: {id: "1", firstname: "Cédric", lastname: "D"},
 })
 
 describe("StravaAccount", () => {
@@ -162,7 +162,7 @@ describe("StravaAccount", () => {
     ) as StravaTokens
     expect(stored).toMatchObject({
       refreshToken: "new-refresh",
-      athlete: {id: 1},
+      athlete: {id: "1"},
     })
   })
 
@@ -208,16 +208,32 @@ describe("StravaHttp", () => {
       fetchMock
     )
 
-    await expect(http.getUpload("t", 1)).rejects.toMatchObject({
+    await expect(http.getUpload("t", "1")).rejects.toMatchObject({
       code: "rateLimited",
       status: 429,
     })
-    await expect(http.getUpload("t", 1)).rejects.toMatchObject({
+    await expect(http.getUpload("t", "1")).rejects.toMatchObject({
       code: "api",
       message: "Bad Request: file invalid",
     })
-    await expect(http.getUpload("t", 1)).rejects.toMatchObject({
+    await expect(http.getUpload("t", "1")).rejects.toMatchObject({
       code: "network",
+    })
+  })
+
+  it("keeps 64-bit ids exact", async () => {
+    const http = new StravaHttp(
+      () => ({clientId: "1", clientSecret: "s"}),
+      async () =>
+        response(
+          200,
+          '{"id":12345678901234567890,"status":"ready","error":null,"activity_id":12345678901234567891}'
+        )
+    )
+
+    expect(await http.getUpload("t", "1")).toMatchObject({
+      id: "12345678901234567890",
+      activity_id: "12345678901234567891",
     })
   })
 
@@ -239,7 +255,7 @@ describe("StravaHttp", () => {
       externalId: "walkingbar-2026-10-20-abcd1234",
     })
 
-    expect(upload).toMatchObject({id: 5, activity_id: null})
+    expect(upload).toMatchObject({id: "5", activity_id: null})
     const [url, init] = fetchMock.mock.calls[0] as unknown as [
       string,
       RequestInit,

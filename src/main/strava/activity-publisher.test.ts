@@ -21,17 +21,17 @@ function fakeHttp(existing: StravaSummaryActivity[] = []) {
   return {
     uploadActivityFile: vi.fn(
       async (_accessToken: string, _upload: ActivityFileUpload) => ({
-        id: 1,
+        id: "1",
         status: "Your activity is still being processed.",
         error: null as string | null,
-        activity_id: null as number | null,
+        activity_id: null as string | null,
       })
     ),
-    getUpload: vi.fn(async (_accessToken: string, _uploadId: number) => ({
-      id: 1,
+    getUpload: vi.fn(async (_accessToken: string, _uploadId: string) => ({
+      id: "1",
       status: "Your activity is ready.",
       error: null as string | null,
-      activity_id: 987654321 as number | null,
+      activity_id: "987654321" as string | null,
     })),
     updateActivity: vi.fn(
       async (_accessToken: string, _id: string, _fields: object) => ({})
@@ -105,7 +105,7 @@ describe("ActivityPublisher", () => {
   it("adopts an activity a previous attempt created without saving its id", async () => {
     const http = fakeHttp([
       {
-        id: 42,
+        id: "42",
         name: "Treadmill walk",
         sport_type: "Walk",
         start_date_local: "2026-10-16T10:00:00Z",
@@ -122,7 +122,7 @@ describe("ActivityPublisher", () => {
   it("does not adopt a different activity of the same day", async () => {
     const http = fakeHttp([
       {
-        id: 7,
+        id: "7",
         name: "Tapis",
         sport_type: "Walk",
         start_date_local: "2026-10-16T10:00:00Z",
@@ -215,7 +215,7 @@ describe("ActivityPublisher", () => {
   it("records a day already on Strava while syncing, and reports the walks of each day", async () => {
     const http = fakeHttp([
       {
-        id: 77,
+        id: "77",
         name: "Tapis",
         sport_type: "Walk",
         start_date_local: "2026-10-16T10:00:00Z",
@@ -223,7 +223,7 @@ describe("ActivityPublisher", () => {
         trainer: true,
       },
       {
-        id: 78,
+        id: "78",
         name: "Run",
         sport_type: "Run",
         start_date_local: "2026-10-16T18:00:00Z",
@@ -247,7 +247,7 @@ describe("ActivityPublisher", () => {
   it("reads every page of recent activities", async () => {
     const http = fakeHttp()
     const fullPage = Array.from({length: 100}, (_, index) => ({
-      id: index,
+      id: String(index),
       name: "Ride",
       sport_type: "Ride",
       start_date_local: "2026-10-15T08:00:00Z",
@@ -264,7 +264,7 @@ describe("ActivityPublisher", () => {
   it("adopts the existing activity when Strava reports the upload as a duplicate", async () => {
     const http = fakeHttp()
     http.getUpload.mockResolvedValueOnce({
-      id: 1,
+      id: "1",
       status: "There was an error processing your activity.",
       error:
         "walkingpad.fit duplicate of <a href='/activities/555' target='_blank'>Treadmill walk</a>",
@@ -279,7 +279,7 @@ describe("ActivityPublisher", () => {
   it("reports a processing error in plain text", async () => {
     const http = fakeHttp()
     http.getUpload.mockResolvedValueOnce({
-      id: 1,
+      id: "1",
       status: "Error",
       error: "Time information is missing &amp; invalid",
       activity_id: null,
@@ -308,7 +308,7 @@ describe("ActivityPublisher", () => {
     const publisher = createPublisher(http)
     await publisher.publish(DAY_TARGET)
     const fullPage = Array.from({length: 100}, (_, index) => ({
-      id: index,
+      id: String(index),
       name: "Ride",
       sport_type: "Ride",
       start_date_local: "2026-10-15T08:00:00Z",
@@ -376,7 +376,7 @@ describe("ActivityPublisher", () => {
     settings = {...settings, grouping: "session"}
     const http = fakeHttp([
       {
-        id: 91,
+        id: "91",
         name: "Tapis",
         sport_type: "Walk",
         start_date_local: "2026-10-16T10:00:00Z",

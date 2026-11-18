@@ -10,7 +10,7 @@ import type {StravaSummaryActivity} from "./strava-http"
 const activity = (
   overrides: Partial<StravaSummaryActivity>
 ): StravaSummaryActivity => ({
-  id: 1,
+  id: "1",
   name: "Walk",
   sport_type: "Walk",
   start_date_local: "2026-10-20T10:08:54Z",
@@ -34,12 +34,12 @@ describe("Strava walks", () => {
     const walksByDay = groupWalksByDay(
       toStravaWalks([
         activity({
-          id: 1,
+          id: "1",
           start_date_local: "2026-10-16T10:00:00Z",
           name: "Tapis",
         }),
-        activity({id: 2, sport_type: "Run"}),
-        activity({id: 3, start_date_local: "2026-10-20T23:30:00Z"}),
+        activity({id: "2", sport_type: "Run"}),
+        activity({id: "3", start_date_local: "2026-10-20T23:30:00Z"}),
       ])
     )
     expect(Object.keys(walksByDay)).toEqual(["2026-10-16", "2026-10-20"])
@@ -51,14 +51,14 @@ describe("Strava walks", () => {
   })
 
   it("finds the walk the app published for the day", () => {
-    const walks = toStravaWalks([activity({id: 9, distance: 3810})])
+    const walks = toStravaWalks([activity({id: "9", distance: 3810})])
     expect(findWalkCoveringDay(walks, draft)?.id).toBe("9")
   })
 
   it("counts any treadmill walk of the day as covering it", () => {
     const walks = toStravaWalks([
       activity({
-        id: 4,
+        id: "4",
         start_date_local: "2026-10-20T08:00:00Z",
         distance: 2000,
         trainer: true,
@@ -70,7 +70,7 @@ describe("Strava walks", () => {
   it("leaves an outdoor walk of the same day aside", () => {
     const walks = toStravaWalks([
       activity({
-        id: 5,
+        id: "5",
         start_date_local: "2026-10-20T17:00:00Z",
         distance: 5000,
       }),

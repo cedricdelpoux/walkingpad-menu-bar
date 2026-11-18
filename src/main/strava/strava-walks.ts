@@ -14,7 +14,7 @@ export function toStravaWalks(
   return activities
     .filter((activity) => activity.sport_type === WALK_SPORT_TYPE)
     .map((activity) => ({
-      id: String(activity.id),
+      id: activity.id,
       name: activity.name,
       distanceMeters: activity.distance,
       startDateLocal: activity.start_date_local,

@@ -1,7 +1,7 @@
 import type {DayKey} from "./day"
 
 export interface StravaAthlete {
-  id: number
+  id: string
   firstname: string
   lastname: string
 }
